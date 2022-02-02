@@ -21,7 +21,7 @@ parser.add_argument(
 FLAGS, unparsed = parser.parse_known_args()
 
 
-print 'Step #1: Read candidate classes'
+print('Step #1: Read candidate classes')
 candidate_classes = set()
 with open(os.path.join(FLAGS.io_dir, 'lookup_classes.csv'), 'r') as f:
     for line in f.readlines():
@@ -29,7 +29,7 @@ with open(os.path.join(FLAGS.io_dir, 'lookup_classes.csv'), 'r') as f:
         cls_name = line_tmp[0][1:]
         candidate_classes.add(cls_name)
 
-print 'Step #2: Read entities and their classes'
+print('Step #2: Read entities and their classes')
 ent_cls = dict()
 with open(os.path.join(FLAGS.io_dir, 'lookup_entities.csv')) as f:
     for line in f.readlines():
@@ -82,10 +82,10 @@ for cls1 in candidate_classes2:
                     cls_neg_entities[cls1] = {ent}
 
 print('''Step #5: output negative samples''')
-with open(os.path.join(FLAGS.io_dir, 'particular_neg_samples.csv'), 'w') as f:
+with open(os.path.join(FLAGS.io_dir, 'particular_neg_samples.csv'), 'w', encoding="utf-8") as f:
     for cls in candidate_classes2:
         neg_entities = cls_neg_entities[cls]
-        print '     %s: %d' % (cls, len(neg_entities))
+        print('     %s: %d' % (cls, len(neg_entities)))
         ent_str = ''
         for ent in neg_entities:
             ent_str += ('"%s",' % ent)

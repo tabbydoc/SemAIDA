@@ -34,10 +34,10 @@ parser.add_argument(
     help='end index')
 FLAGS, unparsed = parser.parse_known_args()
 
-print 'Step #1: reading cells'
+print('Step #1: reading cells')
 col_cells = read_t2d_cells()
 
-print 'Step #2: lookup-based prediction column by column'
+print('Step #2: lookup-based prediction column by column')
 col_class_p = dict()
 for col_i, col in enumerate(col_cells.keys()):
     if col_i < FLAGS.start_index:
@@ -72,7 +72,7 @@ for col_i, col in enumerate(col_cells.keys()):
         time.sleep(60*5)
 
 
-print 'Step #3: saving lookup-based predictions'
+print('Step #3: saving lookup-based predictions')
 out_filename = 'p_lookup.csv'
 with open(os.path.join(FLAGS.io_dir, 'predictions', out_filename), 'a') as f:
     for col_class in col_class_p.keys():

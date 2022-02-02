@@ -29,13 +29,13 @@ if not os.path.exists(FLAGS.io_dir):
     os.mkdir(FLAGS.io_dir)
 
 
-print '''Step #1: Read table cells'''
+print('''Step #1: Read table cells''')
 col_cells = read_t2d_cells()
 col_num = len(col_cells.keys())
 print('     columns #: %d' % col_num)
 
 
-print '''Step #2: Read existing entities and classes'''
+print('''Step #2: Read existing entities and classes''')
 ent_file = os.path.join(FLAGS.io_dir, 'lookup_entities.csv')
 cls_file = os.path.join(FLAGS.io_dir, 'lookup_classes.csv')
 entities, cls_count = set(), dict()
@@ -52,13 +52,13 @@ if os.path.exists(cls_file):
 print('     entities # %d, classes # %d' % (len(entities), len(cls_count.keys())))
 
 
-print '''Step #3: Lookup new entities and classes'''
+print('''Step #3: Lookup new entities and classes''')
 ent_cls = dict()
 for i, col in enumerate(col_cells.keys()):
     if i < FLAGS.start_index:
         continue
     if i >= FLAGS.end_index:
-        print('     This part is fully done, %d entities added' % len(ent_cls.keys()))
+        print('This part is fully done, %d entities added' % len(ent_cls.keys()))
         break
     cells = col_cells.get(col)
     col_classes = set()
@@ -84,11 +84,11 @@ for i, col in enumerate(col_cells.keys()):
             f.write('"%s",%s\n' % (col, s_cls[:-1]))
 
     if i % 10 == 0:
-        print ('    column %d done' % i)
+        print('column %d done' % i)
 
 
-print '''Step #4: Update entities and classes to files '''
-with open(ent_file, 'a') as out_f:
+print('''Step #4: Update entities and classes to files ''')
+with open(ent_file, 'a', encoding="utf-8") as out_f:
     for ent in ent_cls.keys():
         try:
             str_cls = ''
@@ -100,7 +100,7 @@ with open(ent_file, 'a') as out_f:
                 out_f.write('"%s"\n' % ent)
         except UnicodeEncodeError:
             pass
-with open(cls_file, 'a') as out_f:
+with open(cls_file, 'a', encoding="utf-8") as out_f:
     for cls in cls_count.keys():
         try:
             out_f.write('"%s","%d"\n' % (cls, cls_count[cls]))

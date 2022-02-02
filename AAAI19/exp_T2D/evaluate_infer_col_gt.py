@@ -27,3 +27,4 @@ with open(os.path.join(FLAGS.io_dir, 'column_gt_extend_fg.csv'), 'w') as f:
         classes_str = '"' + '","'.join(col_classes[col]) + '"'
         f.write('"%s",%s\n' % (col, classes_str))
 
+

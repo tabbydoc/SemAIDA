@@ -3,10 +3,12 @@ This file contains functions related to processing of T2Dv2 table sets
 """
 import os
 import sys
+from util_strings import t2dv2_path
 
-t2d_dir = '../T2Dv2'
+# t2d_dir = "/..T2Dv2"
+t2d_dir = t2dv2_path  # решено
 if not os.path.exists(t2d_dir):
-    print('%s does not exist' % t2d_dir)
+    print(f'{t2d_dir} does not exist')
     sys.exit(1)
 
 
@@ -31,7 +33,7 @@ def read_col_header():
     col_headers = dict()
     prop_dir = os.path.join(t2d_dir, 'property')
     for prop_filename in os.listdir(prop_dir):
-        with open(os.path.join(prop_dir, prop_filename)) as f:
+        with open(os.path.join(prop_dir, prop_filename), "r", encoding="utf-8") as f:
             tab_id = prop_filename.split('.csv')[0]
             for line in f.readlines():
                 line_tmp = line.strip().split('","')

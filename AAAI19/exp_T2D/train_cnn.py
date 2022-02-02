@@ -1,6 +1,8 @@
 """
 The file to train CNNs
 """
+# -*- coding: utf-8 -*-
+
 import sys
 import os
 import random
@@ -8,12 +10,14 @@ import argparse
 import datetime
 import numpy as np
 import tensorflow as tf
+import tensorflow.compat.v1 as v1
+from tensorflow.python.ops import control_flow_ops
 from gensim.models import Word2Vec
 from util_cnn import SyntheticColumnCNN
 from util_cnn import generate_synthetic_columns
 from util_cnn import synthetic_columns2sequence
 from util_cnn import sequence2matrix
-
+from util_strings import Word2Wec_path
 
 current_path = os.path.dirname(os.path.realpath(sys.argv[0]))
 parser = argparse.ArgumentParser()
@@ -21,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '--model_dir',
     type=str,
-    default='~/w2v_model/enwiki_model/',
+    default=Word2Wec_path,
     help='Directory of word2vec model')
 parser.add_argument(
     '--io_dir',
@@ -31,7 +35,7 @@ parser.add_argument(
 parser.add_argument(
     '--cnn_dir',
     type=str,
-    default=os.path.join(current_path, 'in_out/cnn'),
+    default=os.path.join(current_path, 'in_out\\cnn'),
     help='Directory of trained models')
 
 parser.add_argument(
@@ -97,12 +101,20 @@ if not os.path.exists(cnn_dir):
     os.mkdir(cnn_dir)
 
 
-def read_cls_entities(file_name):
+def read_cls_entities(file_name, decode=None):
     cls_entities = dict()
-    with open(os.path.join(FLAGS.io_dir, file_name), 'r') as fun_f:
+    with open(os.path.join(FLAGS.io_dir, file_name), encoding=decode) as fun_f:
+        # print(f"{file_name}")
         for line in fun_f.readlines():
-            line_tmp = line.strip().split('","')
-            line_tmp[0] = line_tmp[0][1:]
+            # for line_index, line in enumerate(fun_f.readlines(), 1):
+            # line_tmp = line.strip().split('","')
+            if file_name == "general_pos_samples.csv":
+                line_tmp = line.strip().split(',')
+                line_tmp[0] = line_tmp[0][:]
+            else:
+                line_tmp = line.strip().split('","')
+                line_tmp[0] = line_tmp[0][1:]
+            # print(line_tmp[0])
             line_tmp[-1] = line_tmp[-1][:-1]
             cls_entities[line_tmp[0]] = line_tmp[1:]
     return cls_entities
@@ -110,11 +122,11 @@ def read_cls_entities(file_name):
 
 def align_samples(pos, neg):
     if len(pos) <= len(neg):
-        pos_new = pos * (len(neg) / len(pos))
+        pos_new = pos * int(len(neg) / len(pos))
         neg_new = neg * 1
         pos_new += random.sample(pos, len(neg_new) - len(pos_new))
     else:
-        neg_new = neg * (len(pos) / len(neg))
+        neg_new = neg * int(len(pos) / len(neg))
         pos_new = pos * 1
         neg_new += random.sample(neg, len(pos_new) - len(neg_new))
     return pos_new, neg_new
@@ -124,7 +136,7 @@ def batch_iter(data, shuffle=True):
     """
         generate batches of data
     """
-    data = np.array(data)
+    data = np.array(data, dtype=object)
     data_size = len(data)
     num_batches_per_epoch = int((len(data) - 1) / FLAGS.batch_size) + 1
     for epoch in range(FLAGS.num_epochs):
@@ -150,8 +162,9 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
 
     with tf.Graph().as_default():
 
-        session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
-        sess = tf.Session(config=session_conf)
+        # session_conf = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+        session_conf = v1.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+        sess = v1.Session(config=session_conf)
         with sess.as_default():
             cnn = SyntheticColumnCNN(
                 sequence_length=FLAGS.sequence_size,
@@ -162,44 +175,46 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
                 num_filters=3)
 
             # Define Training procedure
-            global_step = tf.Variable(0, name="global_step", trainable=False)
-            optimizer = tf.train.AdamOptimizer(1e-3)
+            global_step = v1.Variable(0, name="global_step", trainable=False)
+            optimizer = v1.train.AdamOptimizer(learning_rate=0.001)
+            # optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
             grads_and_vars = optimizer.compute_gradients(cnn.loss)
             train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
+            # train_op = optimizer.apply_gradients(grads_and_vars)
 
             # Keep track of gradient values and sparsity (optional)
             grad_summaries = []
             for g, v in grads_and_vars:
                 if g is not None:
-                    grad_hist_summary = tf.summary.histogram("{}/grad/hist".format(v.name), g)
-                    sparsity_summary = tf.summary.scalar("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
+                    grad_hist_summary = v1.summary.histogram("{}/grad/hist".format(v.name), g)
+                    sparsity_summary = v1.summary.scalar("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
                     grad_summaries.append(grad_hist_summary)
                     grad_summaries.append(sparsity_summary)
-            grad_summaries_merged = tf.summary.merge(grad_summaries)
-
+            grad_summaries_merged = v1.summary.merge(grad_summaries)
+            
             # Summaries for loss and accuracy
-            loss_summary = tf.summary.scalar("loss", cnn.loss)
-            acc_summary = tf.summary.scalar("accuracy", cnn.accuracy)
+            loss_summary = v1.summary.scalar("loss", cnn.loss)
+            acc_summary = v1.summary.scalar("accuracy", cnn.accuracy)
 
             # Train Summaries
-            train_summary_op = tf.summary.merge([loss_summary, acc_summary, grad_summaries_merged])
+            train_summary_op = v1.summary.merge([loss_summary, acc_summary, grad_summaries_merged])
             train_summary_dir = os.path.join(cls_dir, "summaries", "train")
-            train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
+            train_summary_writer = v1.summary.FileWriter(train_summary_dir, sess.graph)
 
             # Dev summaries
-            dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
+            dev_summary_op = control_flow_ops.merge([loss_summary, acc_summary])
             dev_summary_dir = os.path.join(cls_dir, "summaries", "dev")
-            dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, sess.graph)
+            dev_summary_writer = v1.summary.FileWriter(dev_summary_dir, sess.graph)
 
             # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
             checkpoint_dir = os.path.abspath(os.path.join(cls_dir, "checkpoints"))
             checkpoint_prefix = os.path.join(checkpoint_dir, "model")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            saver = tf.train.Saver(tf.global_variables(), max_to_keep=5)
+            saver = v1.train.Saver(v1.global_variables(), max_to_keep=5)
 
             # Initialize all variables
-            sess.run(tf.global_variables_initializer())
+            sess.run(v1.global_variables_initializer())
 
             def train_step(train_x_batch, train_y_batch):
                 """
@@ -241,7 +256,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
             for batch in batches:
                 x_batch, y_batch = zip(*batch)
                 train_step(x_batch, y_batch)
-                current_step = tf.train.global_step(sess, global_step)
+                current_step = v1.train.global_step(sess, global_step)
                 if current_step % FLAGS.evaluate_every == 0 and x_dev.shape[0] > 0:
                     print("\n       Evaluation:")
                     dev_step(x_dev, y_dev, writer=dev_summary_writer)
@@ -256,7 +271,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
                 for batch_ft in batches_ft:
                     x_batch_ft, y_batch_ft = zip(*batch_ft)
                     train_step(x_batch_ft, y_batch_ft)
-                    current_step = tf.train.global_step(sess, global_step)
+                    current_step = v1.train.global_step(sess, global_step)
                     if current_step % FLAGS.evaluate_every == 0 and x_dev.shape[0] > 0:
                         print("\n       Evaluation:")
                         dev_step(x_dev, y_dev, writer=dev_summary_writer)
@@ -309,18 +324,17 @@ elif FLAGS.train_type == 3:
 else:
     sys.exit(0)
 
-
-print 'Step #1: read classes'
+print('Step #1: read classes')
 classes = set()
 with open(os.path.join(FLAGS.io_dir, 'particular_pos_samples.csv'), 'r') as f:
     for l in f.readlines():
         l_tmp = l.strip().split('","')
         classes.add(l_tmp[0][1:])
 
-print 'Step #2: read positive and negative particular entities, positive general entities'
+print('Step #2: read positive and negative particular entities, positive general entities')
 cls_pos_par_entities = read_cls_entities('particular_pos_samples.csv')
-cls_neg_par_entities = read_cls_entities('particular_neg_samples.csv')
-cls_pos_gen_entities = read_cls_entities('general_pos_samples.csv')
+cls_neg_par_entities = read_cls_entities('particular_neg_samples.csv', 'utf-8')
+cls_pos_gen_entities = read_cls_entities('general_pos_samples.csv', 'utf-8')
 
 print('Step #3: load word2vec model')
 w2v_model = Word2Vec.load(os.path.join(FLAGS.model_dir, 'word2vec_gensim'))

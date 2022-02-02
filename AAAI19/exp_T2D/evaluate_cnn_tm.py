@@ -70,12 +70,12 @@ def predict_unit(test_x, classifier_name):
     return test_p[:, 1]
 
 
-print 'Step #1: reading cnn classifiers'
+print('Step #1: reading cnn classifiers')
 cnn_classifiers = set()
 for cls_name in os.listdir(FLAGS.cnn_evaluate):
     cnn_classifiers.add(cls_name)
 
-print 'Step #2: reading gt classes, and its columns'
+print('Step #2: reading gt classes, and its columns')
 class_cols = dict()
 with open(os.path.join(FLAGS.io_dir, 'column_gt_extend_fg.csv'), 'r') as f:
     lines = f.readlines()
@@ -92,7 +92,7 @@ with open(os.path.join(FLAGS.io_dir, 'column_gt_extend_fg.csv'), 'r') as f:
             else:
                 class_cols[cls] = [col]
 
-print 'Step #3: reading TM classes, filtered by category'
+print('Step #3: reading TM classes, filtered by category')
 tm_classes = set()
 if FLAGS.category == 'all':
     for classifier in cnn_classifiers:
@@ -106,13 +106,13 @@ else:
                 tm_classes.add(cls)
 print('     %d TM classes' % len(tm_classes))
 
-print 'Step #4: reading cells'
+print('Step #4: reading cells')
 col_cells = read_t2d_cells()
 all_cells = list()
 for cells in col_cells.values():
     all_cells = all_cells + cells
 
-print 'Step #5: predicting class by class'
+print('Step #5: predicting class by class')
 print('     load word2vec model ...')
 w2v_model = Word2Vec.load(os.path.join(FLAGS.model_dir, 'word2vec_gensim'))
 tm_class_auc = dict()
@@ -154,7 +154,7 @@ for tm_cls in tm_classes:
         tm_class_auc[tm_cls] = -1
         print('     %s: no CNN classifier' % tm_cls)
 
-print 'Step #6: printing TM classes and their AUCs'
+print('Step #6: printing TM classes and their AUCs')
 for tm_cls in tm_class_auc.keys():
     print('     %s' % tm_cls)
 for tm_cls in tm_class_auc.keys():

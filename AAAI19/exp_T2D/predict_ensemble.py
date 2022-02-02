@@ -8,13 +8,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '--predictions_voting',
     type=str,
-    default=os.path.join(current_path, 'in_out/predictions/p_lookup.csv'),
+    default=os.path.join(current_path, 'in_out\\predictions\\p_lookup.csv'),
     help='predictions by voting')
 
 parser.add_argument(
     '--predictions_model',
     type=str,
-    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
+    default=os.path.join(current_path, 'in_out\\predictions\\p_cnn_1_2_1.00.csv'),
     help='predictions by ML models')
 
 parser.add_argument(

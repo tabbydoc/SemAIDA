@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.compat.v1 as v1
 import random
 import numpy as np
 from pattern.text.en import tokenize
@@ -73,7 +74,7 @@ def synthetic_columns2sequence(ent_units, sequence_size):
 def sequence2matrix(word_seq, sequence_size, w2v_model):
     ent_v = np.zeros((sequence_size, w2v_model.vector_size, 1))
     for i, word in enumerate(word_seq):
-        if not word == 'NaN' and word in w2v_model.wv.vocab:
+        if not word == 'NaN' and word in w2v_model.wv.key_to_index:
             w_vec = w2v_model.wv[word]
             ent_v[i] = w_vec.reshape((w2v_model.vector_size, 1))
     return ent_v
@@ -87,9 +88,9 @@ class SyntheticColumnCNN(object):
 
     def __init__(self, sequence_length, num_classes, embedding_size, channel_num, filter_sizes, num_filters):
         # Placeholders for input, output and dropout
-        self.input_x = tf.placeholder(tf.float32, [None, sequence_length, embedding_size, channel_num], name="input_x")
-        self.input_y = tf.placeholder(tf.float32, [None, num_classes], name="input_y")
-        self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
+        self.input_x = v1.placeholder(tf.float32, [None, sequence_length, embedding_size, channel_num], name="input_x")
+        self.input_y = v1.placeholder(tf.float32, [None, num_classes], name="input_y")
+        self.dropout_keep_prob = v1.placeholder(tf.float32, name="dropout_keep_prob")
 
         # Keeping track of l2 regularization loss (optional)
         # l2_loss = tf.constant(0.0)
@@ -99,7 +100,7 @@ class SyntheticColumnCNN(object):
         for i, filter_size in enumerate(filter_sizes):
             with tf.name_scope("conv-max_pool-%s" % filter_size):
                 filter_shape = [filter_size, embedding_size, 1, num_filters]
-                Conv_W = tf.Variable(tf.truncated_normal(filter_shape, stddev=0.1), name="Conv_W")
+                Conv_W = tf.Variable(v1.truncated_normal(filter_shape, stddev=0.1), name="Conv_W")
                 Conv_b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name="Conv_b")
                 conv = tf.nn.conv2d(
                     self.input_x,
@@ -123,14 +124,15 @@ class SyntheticColumnCNN(object):
         with tf.name_scope("dropout"):
             self.h_drop = tf.nn.dropout(self.h_pool_flat, self.dropout_keep_prob)
 
-        with tf.name_scope("output"):
-            FC_W = tf.get_variable("FC_W",
+        with v1.name_scope("output"):
+            FC_W = v1.get_variable("FC_W",
                                    shape=[num_filters_total, num_classes],
-                                   initializer=tf.contrib.layers.xavier_initializer())
+                                   #initializer=tf.contrib.layers.xavier_initializer())
+                                   initializer=tf.keras.initializers.GlorotNormal())
             FC_b = tf.Variable(tf.constant(0.1, shape=[num_classes]), name="FC_b")
             # l2_loss += tf.nn.l2_loss(W)
             # l2_loss += tf.nn.l2_loss(b)
-            self.scores = tf.nn.xw_plus_b(self.h_drop, FC_W, FC_b, name="scores")
+            self.scores = v1.nn.xw_plus_b(self.h_drop, FC_W, FC_b, name="scores")
             self.probabilities = tf.nn.softmax(self.scores, name='probabilities')
             self.predictions = tf.argmax(self.scores, 1, name="predictions")
 

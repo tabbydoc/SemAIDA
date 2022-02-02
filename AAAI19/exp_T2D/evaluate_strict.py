@@ -18,13 +18,13 @@ parser.add_argument(
     '--predictions',
     type=str,
     # default=os.path.join(current_path, 'in_out/predictions/p_lookup.csv'),
-    # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
-    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_lookup.csv'),
+    default=os.path.join(current_path, 'in_out\\predictions\\p_cnn_1_2_1.00.csv'),
+    # default=os.path.join(current_path, 'in_out\\predictions\\p_cnn_1_2_1.00_lookup.csv'),
     help='File of predictions')
 parser.add_argument(
     '--ground_truths',
     type=str,
-    default=os.path.join(current_path, 'in_out/column_gt_extend_fg.csv'),
+    default=os.path.join(current_path, 'in_out\\column_gt_extend_fg.csv'),
     help='Ground truths')
 parser.add_argument(
     '--primary_key',
@@ -34,7 +34,7 @@ parser.add_argument(
 FLAGS, unparsed = parser.parse_known_args()
 
 
-print 'Step #1: Read column, its fine grained ground truth and all the ground truths'
+print('Step #1: Read column, its fine grained ground truth and all the ground truths')
 col_gt_classes = dict()
 col_gt_fg_cls = dict()
 with open(FLAGS.ground_truths) as f:
@@ -45,8 +45,7 @@ with open(FLAGS.ground_truths) as f:
         col = line_tmp[0]
         col_gt_fg_cls[col] = line_tmp[1]
         col_gt_classes[col] = set(line_tmp[1:])
-
-print 'Step #2: Read column, its predicted classes and scores'
+print('Step #2: Read column, its predicted classes and scores')
 col_pclasses = dict()
 with open(FLAGS.predictions) as f:
     for line in f.readlines():
@@ -61,8 +60,8 @@ with open(FLAGS.predictions) as f:
                 col_pclasses[col].add(cls)
             else:
                 col_pclasses[col] = {cls}
-
-print 'Step #4: Calculate metrics'
+print(col_pclasses)
+print('Step #3: Calculate metrics')
 hits, p_num, gt_num = 0, 0, 0
 pk_cols = primary_key_cols()
 for col in col_pclasses.keys():

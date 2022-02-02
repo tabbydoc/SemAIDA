@@ -19,8 +19,8 @@ parser.add_argument(
     '--predictions',
     type=str,
     # default=os.path.join(current_path, 'in_out/predictions/p_lookup.csv'),
-    # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
-    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_lookup.csv'),
+    default=os.path.join(current_path, 'in_out\\predictions\\p_cnn_1_2_1.00.csv'),
+    # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_lookup.csv'),
     help='File of predictions')
 parser.add_argument(
     '--ground_truths',
@@ -35,7 +35,7 @@ parser.add_argument(
 FLAGS, unparsed = parser.parse_known_args()
 
 
-print 'Step #1: Read column type ground truths'
+print('Step #1: Read column type ground truths')
 col_cls_gt = set()
 with open(FLAGS.ground_truths) as f:
     for line in f.readlines():
@@ -47,7 +47,7 @@ with open(FLAGS.ground_truths) as f:
             col_cls = '%s:%s' % (col, cls)
             col_cls_gt.add(col_cls)
 
-print 'Step #2: Read positive and negative predictions'
+print('Step #2: Read positive and negative predictions')
 col_cls_pos = set()
 with open(FLAGS.predictions) as f:
     for line in f.readlines():
@@ -72,7 +72,7 @@ if FLAGS.primary_key == 'yes':
             col_cls_pos2.add(col_cls)
     col_cls_gt, col_cls_pos = col_cls_gt2, col_cls_pos2
 
-print 'Step #3: Calculate metrics'
+print('Step #3: Calculate metrics')
 
 hits = len(col_cls_pos.intersection(col_cls_gt))
 
@@ -84,7 +84,7 @@ f1 = 2 * precision * recall / (precision + recall)
 print('Precision: %.4f' % precision)
 print('Recall: %.4f' % recall)
 print('F1 score: %.4f' % f1)
-print('%.3f' % precision)
-print('%.3f' % recall)
-print('%.3f' % f1)
+print('%.4f' % precision)
+print('%.4f' % recall)
+print('%.4f' % f1)
 
