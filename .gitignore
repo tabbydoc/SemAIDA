@@ -128,7 +128,7 @@ dmypy.json
 bd.xls
 w2v_model
 
-/cnn
-/predictions
+cnn/
+predictions/
 
 IJCAI19/

@@ -1,9 +1,9 @@
 Our software settings:
-    python 2.7
-    tensorflow 1.9.0
-    gensim 3.4.0
-    python sparql-client 2.6
-    sklearn 0.19.2
+    python 3.8
+    tensorflow 2.6.0
+    gensim 4.0.1
+    python sparql-client 3.6
+    sklearn 0.24.2
 
 Requirements:
     wikipedia corpus (e.g., https://github.com/attardi/wikiextractor)
@@ -17,7 +17,7 @@ Instructions:
 
     Step #1 (sampling):
         sample_lookup.py
-            --> lookup_entities, lookup_classes.py, lookup_col_classes.py
+            --> lookup_entities.csv, lookup_classes.csv, lookup_col_classes.csv
         sample_particular.py
             --> particular_pos_samples.csv, particular_neg_samples.py
         sample_general.py
@@ -25,7 +25,7 @@ Instructions:
 
     Step #2 (training):
         train_cnn.py
-            --> in_out/cnn/cnn_1_2_1.00/ (1: synthetic_column_size, 2: train_type, 1.00: knowledge gap)
+            --> in_out/cnn/cnn_1_2_1.00/ (1: synthetic_column_size, 2: train_type, 1p.00: knowledge gap)
 
     Step #3 (prediction):
         predict_colnet.py
@@ -40,3 +40,14 @@ Instructions:
     Step #4 (evaluation):
         evaluate_strict.py
         evaluate_tolerant.py
+
+Note: to use sparql.query in python 3.8 go to sparql library
+      find the IRI class and change return of the __str__() function.
+      From:
+      def __str__(self):
+            return self.value.encode("unicode-escape")
+
+      to:
+       def __str__(self):
+            return self.value
+
