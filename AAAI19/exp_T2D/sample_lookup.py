@@ -54,10 +54,9 @@ print('     entities # %d, classes # %d' % (len(entities), len(cls_count.keys())
 
 print('''Step #3: Lookup new entities and classes''')
 ent_cls = dict()
-for i, col in enumerate(col_cells.keys()):
-    if i < FLAGS.start_index:
-        continue
-    if i >= FLAGS.end_index:
+up_lim = FLAGS.end_index if (FLAGS.end_index <= len(col_cells.keys())) else len(col_cells.keys())
+for i, col in enumerate(col_cells.keys(), FLAGS.start_index):
+    if i >= up_lim:
         print('This part is fully done, %d entities added' % len(ent_cls.keys()))
         break
     cells = col_cells.get(col)
@@ -83,26 +82,24 @@ for i, col in enumerate(col_cells.keys()):
                 s_cls += ('"%s",' % c)
             f.write('"%s",%s\n' % (col, s_cls[:-1]))
 
-    if i % 10 == 0:
         print('column %d done' % i)
 
 
-print('''Step #4: Update entities and classes to files ''')
+print('Step #4: Update entities and classes to files ')
+print('Step #4.1: Update entities-file')
+# Добавление сущностей в файл хранящий сущности
 with open(ent_file, 'a', encoding="utf-8") as out_f:
     for ent in ent_cls.keys():
-        try:
-            str_cls = ''
-            for c in ent_cls[ent]:
-                str_cls += ('"%s",' % c)
-            if len(str_cls) > 0:
-                out_f.write('"%s",%s\n' % (ent, str_cls[:-1]))
-            else:
-                out_f.write('"%s"\n' % ent)
-        except UnicodeEncodeError:
-            pass
+        str_cls = ''
+        for c in ent_cls[ent]:
+            str_cls += ('"%s",' % c)
+        if len(str_cls) > 0:
+            out_f.write('"%s",%s\n' % (ent, str_cls[:-1]))
+        else:
+            out_f.write('"%s"\n' % ent)
+
+# Добавление классов в файл хранящий классов
+print('Step #4.2: Update classes-file')
 with open(cls_file, 'a', encoding="utf-8") as out_f:
     for cls in cls_count.keys():
-        try:
-            out_f.write('"%s","%d"\n' % (cls, cls_count[cls]))
-        except UnicodeEncodeError:
-            pass
+        out_f.write('"%s","%d"\n' % (cls, cls_count[cls]))
