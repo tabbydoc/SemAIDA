@@ -124,7 +124,7 @@ class SyntheticColumnCNN(object):
         with tf.name_scope("dropout"):
             self.h_drop = tf.nn.dropout(self.h_pool_flat, self.dropout_keep_prob)
 
-        with v1.name_scope("output"):
+        with tf.name_scope("output"):
             FC_W = v1.get_variable("FC_W",
                                    shape=[num_filters_total, num_classes],
                                    #initializer=tf.contrib.layers.xavier_initializer())

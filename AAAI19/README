@@ -34,14 +34,13 @@ Instructions:
             --> predictions/p_lookup.csv
         predict_ensemble.py
             --> predictions/p_cnn_1_2_1.00_lookup.csv
-        predict_ent_class.py (voting by entities matched by ISWC'17 paper)
-            --> predictions/p_ent_class.csv
 
     Step #4 (evaluation):
         evaluate_strict.py
         evaluate_tolerant.py
 
 Note: to use sparql.query in python 3.8 go to sparql library
+      [Right click to sparql library and find the IRI class]
       find the IRI class and change return of the __str__() function.
       From:
       def __str__(self):

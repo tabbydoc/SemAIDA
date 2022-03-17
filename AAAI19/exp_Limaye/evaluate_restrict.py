@@ -31,7 +31,7 @@ parser.add_argument(
 FLAGS, unparsed = parser.parse_known_args()
 
 
-print 'Step #1: Read column, its fine grained ground truth and all the ground truths'
+print('Step #1: Read column, its fine grained ground truth and all the ground truths')
 col_gt_fg_cls = dict()
 with open(FLAGS.fg_gt) as f:
     for line in f.readlines():
@@ -50,7 +50,7 @@ with open(FLAGS.ground_truths) as f:
         col = line_tmp[0]
         col_gt_classes[col] = set(line_tmp[1:])
 
-print 'Step #2: Read column, its predicted classes and scores'
+print('Step #2: Read column, its predicted classes and scores')
 col_pclasses = dict()
 with open(FLAGS.predictions) as f:
     for line in f.readlines():
@@ -66,7 +66,7 @@ with open(FLAGS.predictions) as f:
             else:
                 col_pclasses[col] = {cls}
 
-print 'Step #4: Calculate metrics'
+print('Step #3: Calculate metrics')
 hits, p_num, gt_num = 0, 0, 0
 for col in col_pclasses.keys():
     pclasses = col_pclasses[col]

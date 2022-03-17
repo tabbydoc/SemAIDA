@@ -49,7 +49,6 @@ with open(os.path.join(FLAGS.io_dir, 'particular_pos_samples.csv'), 'w') as f:
             if cls in ent_cls.get(ent):
                 ent_str += ('"%s",' % ent)
                 ent_num += 1
-        print('     %s: %d' % (cls, ent_num))
         if ent_num >= FLAGS.class_count_threshold:
             candidate_classes2.add(cls)
             f.write('"%s",%s\n' % (cls, ent_str[:-1]))
@@ -85,7 +84,6 @@ print('''Step #5: output negative samples''')
 with open(os.path.join(FLAGS.io_dir, 'particular_neg_samples.csv'), 'w', encoding="utf-8") as f:
     for cls in candidate_classes2:
         neg_entities = cls_neg_entities[cls]
-        print('     %s: %d' % (cls, len(neg_entities)))
         ent_str = ''
         for ent in neg_entities:
             ent_str += ('"%s",' % ent)

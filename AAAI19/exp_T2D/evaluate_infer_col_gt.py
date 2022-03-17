@@ -17,16 +17,18 @@ output: column_gt_extend_fg.csv (best class + okay classes of each column)
 """
 # -*- coding: utf-8 -*-
 
-def extract_classes_columns():
-    current_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-    parser = argparse.ArgumentParser()
+current_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        '--io_dir',
-        type=str,
-        default=os.path.join(current_path, 'in_out'),
-        help='Directory of input/output')
-    FLAGS, unparsed = parser.parse_known_args()
+parser.add_argument(
+    '--io_dir',
+    type=str,
+    default=os.path.join(current_path, 'in_out'),
+    help='Directory of input/output')
+FLAGS, unparsed = parser.parse_known_args()
+
+
+def extract_classes_columns():
 
     # Читаем намера таблиц и их супер классы
     # Из файла col_class_checked_fg

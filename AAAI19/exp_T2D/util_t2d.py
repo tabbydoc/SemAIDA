@@ -2,11 +2,11 @@
 This file contains functions related to processing of T2Dv2 table sets
 """
 import os
+from os import path
 import sys
 from util_strings import t2dv2_path
 
-# t2d_dir = "/..T2Dv2"
-t2d_dir = t2dv2_path  # решено
+t2d_dir = path.abspath(path.join("../T2Dv2"))  # решено
 if not os.path.exists(t2d_dir):
     print(f'{t2d_dir} does not exist')
     sys.exit(1)
@@ -55,7 +55,7 @@ def read_t2d_cells():
     for col in cols:
         tab_id = col.split(' ')[0]
         col_id = col.split(' ')[1]
-        with open(os.path.join(table_dir, ('%s.json' % tab_id))) as f:
+        with open(os.path.join(table_dir, (f"{tab_id}.json"))) as f:
             tab_line = f.readline()
             tab_line = tab_line.strip()
             col_contents = tab_line.split("[[")[1].split("]]")[0]

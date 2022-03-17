@@ -80,7 +80,6 @@ def query_general_entities(cls_entities):
         par_entities = cls_entities[cls]
         entities = list()
         statement = 'SELECT DISTINCT ?e WHERE {?e a dbo:%s} ORDER BY RAND() limit 1000' % cls
-        #result = s.query(statement)
         result = sparql.query('http://dbpedia.org/sparql', statement)
         for row in result.fetchone():
             ent_uri = str(row[0])
@@ -95,7 +94,6 @@ def query_general_entities(cls_entities):
 # extend table's classes with super classes
 def super_classes(col_classes):
     dbo_prefix = "http://dbpedia.org"
-    #s = sparql.Service('http://dbpedia.org/sparql', "utf-8", "GET")
     for i, col in enumerate(col_classes.keys()):
         ori_cls = col_classes[col][0]
         statement = "SELECT distinct ?superclass FROM <http://dbpedia.org> WHERE { dbo:%s " \
@@ -108,7 +106,7 @@ def super_classes(col_classes):
             if super_cls_name not in col_classes[col]:
                 col_classes[col].append(super_cls_name)
         if i % 10 == 0:
-            print(f"{i + 1} columns done")
+            print(f"{i} columns done")
     return col_classes
 
 
