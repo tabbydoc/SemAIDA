@@ -120,6 +120,6 @@ def lookup_new_samples():
     cls_count, ent_cls = lookup_ent_cls(col_cells, entities, cls_count)
     write_ents_cls(cls_count, ent_cls)
 
+
 if __name__ == '__main__':
     lookup_new_samples()
-
