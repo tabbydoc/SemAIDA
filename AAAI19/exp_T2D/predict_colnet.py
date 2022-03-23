@@ -32,7 +32,7 @@ parser.add_argument(
 parser.add_argument(
     '--synthetic_column_type',
     type=int,
-    default=-1,
+    default=1,
     # -1 def,
     help='synthetic column num to sample for each column; '
          '>=1: sample a number; 0: sliding window; -1: permutation combination and voting')
@@ -73,66 +73,71 @@ def predict(test_x, classifier_name):
             input_x = sess.graph.get_operation_by_name("input_x").outputs.pop()
             dropout_keep_prob = sess.graph.get_operation_by_name("dropout_keep_prob").outputs.pop()
             probabilities = sess.graph.get_operation_by_name("output/probabilities").outputs.pop()
+            predictions = sess.graph.get_operation_by_name("output/predictions").outputs.pop()
 
             test_p = sess.run(probabilities, {input_x: test_x, dropout_keep_prob: 0.5})
 
     return test_p[:, 1]
 
 
-print('Step #1: reading cnn classifiers')
-cnn_classifiers = set()
-for cls_name in os.listdir(FLAGS.cnn_evaluate):
-    cnn_classifiers.add(cls_name)
+def predict_colnet():
+    print('Step #1: reading cnn classifiers')
+    cnn_classifiers = set()
+    for cls_name in os.listdir(FLAGS.cnn_evaluate):
+        cnn_classifiers.add(cls_name)
 
-print('Step #2: reading col_cells and col_lookup_classes')
-col_cells = read_t2d_cells()
-col_lookup_classes = dict()
-with open(os.path.join(FLAGS.io_dir, 'lookup_col_classes.csv')) as f:
-    for line in f.readlines():
-        line_tmp = line.strip().split('","')
-        if len(line_tmp) > 1:
-            col = line_tmp[0][1:]
-            line_tmp[-1] = line_tmp[-1][:-1]
-            col_lookup_classes[col] = set(line_tmp[1:])
+    print('Step #2: reading col_cells and col_lookup_classes')
+    col_cells = read_t2d_cells()
+    col_lookup_classes = dict()
+    with open(os.path.join(FLAGS.io_dir, 'lookup_col_classes.csv')) as f:
+        for line in f.readlines():
+            line_tmp = line.strip().split('","')
+            if len(line_tmp) > 1:
+                col = line_tmp[0][1:]
+                line_tmp[-1] = line_tmp[-1][:-1]
+                col_lookup_classes[col] = set(line_tmp[1:])
+            else:
+                col = line_tmp[0][1:-1]
+                col_lookup_classes[col] = set()
+
+    print('Step #3: predicting column by column')
+    col_class_p = dict()
+    for col_i, col in enumerate(col_cells.keys()):
+        cells = col_cells[col]
+        if FLAGS.synthetic_column_type >= 0:
+            if FLAGS.synthetic_column_type > 0:
+                units = random_cells2synthetic_columns(cells, FLAGS.synthetic_column_size, FLAGS.synthetic_column_type)
+            else:
+                units = ordered_cells2synthetic_columns(cells, FLAGS.synthetic_column_size)
         else:
-            col = line_tmp[0][1:-1]
-            col_lookup_classes[col] = set()
+            units = permutation_cells2synthetic_columns(cells)
 
-print('Step #3: predicting column by column')
-col_class_p = dict()
-for col_i, col in enumerate(col_cells.keys()):
-    cells = col_cells[col]
-    if FLAGS.synthetic_column_type >= 0:
-        if FLAGS.synthetic_column_type > 0:
-            units = random_cells2synthetic_columns(cells, FLAGS.synthetic_column_size, FLAGS.synthetic_column_type)
-        else:
-            units = ordered_cells2synthetic_columns(cells, FLAGS.synthetic_column_size)
-    else:
-        units = permutation_cells2synthetic_columns(cells)
+        X = np.zeros((len(units), FLAGS.sequence_size, w2v_model.vector_size, 1))
+        # X = np.random.sample((len(units), FLAGS.sequence_size, w2v_model.vector_size, 1))
+        for i, unit in enumerate(units):
+            seq = synthetic_columns2sequence(unit, FLAGS.sequence_size)
+            X[i] = sequence2matrix(seq, FLAGS.sequence_size, w2v_model)
 
-    X = np.zeros((len(units), FLAGS.sequence_size, w2v_model.vector_size, 1))
-    # X = np.random.sample((len(units), FLAGS.sequence_size, w2v_model.vector_size, 1))
-    for i, unit in enumerate(units):
-        seq = synthetic_columns2sequence(unit, FLAGS.sequence_size)
-        X[i] = sequence2matrix(seq, FLAGS.sequence_size, w2v_model)
+        for classifier in col_lookup_classes[col]:
+            if classifier in cnn_classifiers:
+                col_class = '"%s","%s"' % (col, classifier)
+                p = predict(X, classifier)
+                score = np.mean(p)
+                # print(score)
+                col_class_p[col_class] = score
+
+        if col_i % 5 == 0:
+            print('     column %d predicted' % col_i)
+
+    print('Step #4: saving predictions')
+    out_file_name = 'p_%s.csv' % os.path.basename(FLAGS.cnn_evaluate)
+    full_path = os.path.join(FLAGS.io_dir, 'predictions')
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+    with open(os.path.join(full_path, out_file_name), 'w') as f:
+        for col_class in col_class_p.keys():
+            f.write('%s,"%.2f"\n' % (col_class, col_class_p[col_class]))
 
 
-    for classifier in col_lookup_classes[col]:
-        if classifier in cnn_classifiers:
-            col_class = '"%s","%s"' % (col, classifier)
-            p = predict(X, classifier)
-            score = np.mean(p)
-            # print(score)
-            col_class_p[col_class] = score
-
-    if col_i % 5 == 0:
-        print('     column %d predicted' % col_i)
-
-print('Step #4: saving predictions')
-out_file_name = 'p_%s.csv' % os.path.basename(FLAGS.cnn_evaluate)
-full_path = os.path.join(FLAGS.io_dir, 'predictions')
-if not os.path.exists(full_path):
-    os.makedirs(full_path)
-with open(os.path.join(full_path, out_file_name), 'w') as f:
-    for col_class in col_class_p.keys():
-        f.write('%s,"%.2f"\n' % (col_class, col_class_p[col_class]))
+if __name__ == '__main__':
+    predict_colnet()
