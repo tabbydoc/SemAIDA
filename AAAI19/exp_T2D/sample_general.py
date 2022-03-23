@@ -38,6 +38,6 @@ with open(os.path.join(FLAGS.io_dir, 'general_pos_samples.csv'), 'w', encoding="
         for ent in entities:
             ent_s += f'"{ent}",'
         if len(ent_s) > 0:
-            f.write(f'{cls}, {ent_s[:-1]}\n')
+            f.write(f'"{cls}",{ent_s[:-1]}\n')
         else:
-           f.write(f'{cls}\n')
+           f.write(f'"{cls}"\n')

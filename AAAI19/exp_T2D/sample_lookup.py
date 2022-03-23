@@ -22,7 +22,7 @@ parser.add_argument(
 parser.add_argument(
     '--end_index',
     type=int,
-    default=440,
+    default=400,
     help='end index')
 FLAGS, unparsed = parser.parse_known_args()
 if not os.path.exists(FLAGS.io_dir):

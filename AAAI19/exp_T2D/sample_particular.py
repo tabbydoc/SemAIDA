@@ -66,7 +66,7 @@ for cls1 in candidate_classes2:
                 if ('"%s"' % cls1) in line and ('"%s"' % cls2) in line:
                     joint_classes.add(cls2)
                     break
-    with open(os.path.join(FLAGS.io_dir, 'lookup_entities.csv'), 'r') as f:
+    with open(os.path.join(FLAGS.io_dir, 'lookup_entities.csv'), 'r', encoding="utf-8") as f:
         lines = f.readlines()
         for line in lines:
             line_tmp = line.strip().split('","')
