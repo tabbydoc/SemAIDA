@@ -30,7 +30,7 @@ parser.add_argument(
 parser.add_argument(
     '--primary_key',
     type=str,
-    default='no',
+    default='yes',
     help='Whether use primary key only')
 FLAGS, unparsed = parser.parse_known_args()
 
@@ -61,6 +61,9 @@ with open(FLAGS.predictions) as f:
         if score >= FLAGS.threshold:
             col_cls_pos.add(col_cls)
 
+print(len(col_cls_pos))
+print(len(col_cls_gt))
+
 col_cls_gt2, col_cls_pos2 = set(), set()
 if FLAGS.primary_key == 'yes':
     pk_cols = primary_key_cols()
@@ -71,6 +74,9 @@ if FLAGS.primary_key == 'yes':
         if col_cls.split(':')[0] in pk_cols:
             col_cls_pos2.add(col_cls)
     col_cls_gt, col_cls_pos = col_cls_gt2, col_cls_pos2
+
+print(len(col_cls_pos))
+print(len(col_cls_gt))
 
 print('Step #3: Calculate metrics')
 

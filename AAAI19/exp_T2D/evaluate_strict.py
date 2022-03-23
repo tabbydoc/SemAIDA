@@ -29,7 +29,7 @@ parser.add_argument(
 parser.add_argument(
     '--primary_key',
     type=str,
-    default='yes',
+    default='no',
     help='Whether use primary key only')
 FLAGS, unparsed = parser.parse_known_args()
 
@@ -46,6 +46,7 @@ with open(FLAGS.ground_truths) as f:
         col_gt_fg_cls[col] = line_tmp[1]
         col_gt_classes[col] = set(line_tmp[1:])
 print('Step #2: Read column, its predicted classes and scores')
+
 col_pclasses = dict()
 with open(FLAGS.predictions) as f:
     for line in f.readlines():
@@ -60,7 +61,7 @@ with open(FLAGS.predictions) as f:
                 col_pclasses[col].add(cls)
             else:
                 col_pclasses[col] = {cls}
-print(col_pclasses)
+
 print('Step #3: Calculate metrics')
 hits, p_num, gt_num = 0, 0, 0
 pk_cols = primary_key_cols()

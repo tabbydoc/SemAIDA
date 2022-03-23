@@ -4,7 +4,6 @@ import argparse
 from util_kb import super_classes
 from util_t2d import read_col_gt
 
-
 """
 This file contains a script that
 extracts column ground truth classes of columns of T2Dv2
@@ -29,7 +28,6 @@ FLAGS, unparsed = parser.parse_known_args()
 
 
 def extract_classes_columns():
-
     # Читаем намера таблиц и их супер классы
     # Из файла col_class_checked_fg
     col_classes = read_col_gt()
@@ -44,5 +42,6 @@ def extract_classes_columns():
             classes_str = f'"{joined_str}"'
             f.write(f'"{col}", "{classes_str}"\n')
 
-if __name__ =='__main__':
+
+if __name__ == '__main__':
     extract_classes_columns()
