@@ -11,6 +11,7 @@ import datetime
 import numpy as np
 import tensorflow as tf
 import tensorflow.compat.v1 as v1
+import time
 from tensorflow.python.ops import control_flow_ops
 from gensim.models import Word2Vec
 from util_cnn import SyntheticColumnCNN
@@ -101,20 +102,12 @@ if not os.path.exists(cnn_dir):
     os.mkdir(cnn_dir)
 
 
-def read_cls_entities(file_name, decode=None):
+def read_cls_entities(file_name, decode='utf-8'):
     cls_entities = dict()
     with open(os.path.join(FLAGS.io_dir, file_name), encoding=decode) as fun_f:
-        # print(f"{file_name}")
         for line in fun_f.readlines():
-            # for line_index, line in enumerate(fun_f.readlines(), 1):
-            # line_tmp = line.strip().split('","')
-            if file_name == "general_pos_samples.csv":
-                line_tmp = line.strip().split(',')
-                line_tmp[0] = line_tmp[0][:]
-            else:
-                line_tmp = line.strip().split('","')
-                line_tmp[0] = line_tmp[0][1:]
-            # print(line_tmp[0])
+            line_tmp = line.strip().split('","')
+            line_tmp[0] = line_tmp[0][1:]
             line_tmp[-1] = line_tmp[-1][:-1]
             cls_entities[line_tmp[0]] = line_tmp[1:]
     return cls_entities
@@ -159,6 +152,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
         Train the CNN model
     """
     cls_dir = os.path.join(cnn_dir, cls_name)
+    start_time = time.time()
 
     with tf.Graph().as_default():
 
@@ -191,7 +185,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
                     grad_summaries.append(grad_hist_summary)
                     grad_summaries.append(sparsity_summary)
             grad_summaries_merged = v1.summary.merge(grad_summaries)
-            
+
             # Summaries for loss and accuracy
             loss_summary = v1.summary.scalar("loss", cnn.loss)
             acc_summary = v1.summary.scalar("accuracy", cnn.accuracy)
@@ -202,7 +196,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
             train_summary_writer = v1.summary.FileWriter(train_summary_dir, sess.graph)
 
             # Dev summaries
-            dev_summary_op = control_flow_ops.merge([loss_summary, acc_summary])
+            dev_summary_op = v1.summary.merge([loss_summary, acc_summary])
             dev_summary_dir = os.path.join(cls_dir, "summaries", "dev")
             dev_summary_writer = v1.summary.FileWriter(dev_summary_dir, sess.graph)
 
@@ -229,8 +223,8 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
                     [train_op, global_step, train_summary_op, cnn.loss, cnn.accuracy],
                     feed_dict)
                 time_str = datetime.datetime.now().isoformat()
-                if step % FLAGS.evaluate_every == 0:
-                    print("     {}: step {}, train loss {:g}, train acc {:g}".format(time_str, step, loss, accuracy))
+                # if step % FLAGS.evaluate_every == 0:
+                #     print("     {}: step {}, train loss {:g}, train acc {:g}".format(time_str, step, loss, accuracy))
                 train_summary_writer.add_summary(summaries, step)
 
             def dev_step(dev_x_batch, dev_y_batch, writer=None):
@@ -280,7 +274,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
                     #    print("     Saved [Fine-tuned] model checkpoint to {}\n".format(os.path.basename(path)))
 
             path = saver.save(sess, checkpoint_prefix, global_step=current_step)
-            print("     Saved model checkpoint to {}\n".format(os.path.basename(path)))
+            print(f"     Saved model checkpoint to {os.path.basename(path)}, training time: {round(time.time() - start_time)} sec")
 
 
 def embedding(entities_positive, entities_negative):
@@ -324,57 +318,64 @@ elif FLAGS.train_type == 3:
 else:
     sys.exit(0)
 
-print('Step #1: read classes')
-classes = set()
-with open(os.path.join(FLAGS.io_dir, 'particular_pos_samples.csv'), 'r') as f:
-    for l in f.readlines():
-        l_tmp = l.strip().split('","')
-        classes.add(l_tmp[0][1:])
 
-print('Step #2: read positive and negative particular entities, positive general entities')
-cls_pos_par_entities = read_cls_entities('particular_pos_samples.csv')
-cls_neg_par_entities = read_cls_entities('particular_neg_samples.csv', 'utf-8')
-cls_pos_gen_entities = read_cls_entities('general_pos_samples.csv', 'utf-8')
+def train_cnns():
+    global w2v_model
+    print('   Step #1: read classes')
+    classes = set()
+    with open(os.path.join(FLAGS.io_dir, 'particular_pos_samples.csv'), 'r') as f:
+        for l in f.readlines():
+            l_tmp = l.strip().split('","')
+            classes.add(l_tmp[0][1:])
 
-print('Step #3: load word2vec model')
-w2v_model = Word2Vec.load(os.path.join(FLAGS.model_dir, 'word2vec_gensim'))
+    print('   Step #2: read positive and negative particular entities, positive general entities')
+    cls_pos_par_entities = read_cls_entities('particular_pos_samples.csv')
+    cls_neg_par_entities = read_cls_entities('particular_neg_samples.csv')
+    cls_pos_gen_entities = read_cls_entities('general_pos_samples.csv')
 
-print('Step #4: train class by class')
-for cls in classes:
-    print('\nclass: %s' % cls)
-    print('     %d general pos entities; %d particular pos entities; %d particular neg entities' %
-          (len(cls_pos_gen_entities[cls]), len(cls_pos_par_entities[cls]), len(cls_neg_par_entities[cls])))
+    print('   Step #3: load word2vec model')
+    w2v_model = Word2Vec.load(os.path.join(FLAGS.model_dir, 'word2vec_gensim'))
 
-    # without fine tuning
-    if FLAGS.train_type < 2:
-        entities_neg = cls_neg_par_entities[cls]
-        if FLAGS.train_type == 0:
-            entities_pos = cls_pos_par_entities[cls]
-        elif FLAGS.train_type == 1:
-            entities_pos = cls_pos_gen_entities[cls]
+    print('   Step #4: train class by class')
+    for cls in classes:
+        print('\nclass: %s' % cls)
+        print('     %d general pos entities; %d particular pos entities; %d particular neg entities' %
+              (len(cls_pos_gen_entities[cls]), len(cls_pos_par_entities[cls]), len(cls_neg_par_entities[cls])))
+
+        # without fine tuning
+        if FLAGS.train_type < 2:
+            entities_neg = cls_neg_par_entities[cls]
+            if FLAGS.train_type == 0:
+                entities_pos = cls_pos_par_entities[cls]
+            elif FLAGS.train_type == 1:
+                entities_pos = cls_pos_gen_entities[cls]
+            else:
+                entities_pos = cls_pos_par_entities[cls] + cls_pos_gen_entities[cls]
+
+            p_ents, n_ents = align_samples(entities_pos, entities_neg)
+
+            X, Y = embedding(p_ents, n_ents)
+            dev_sample_index = int(FLAGS.dev_sample_percentage * float(X.shape[0]))
+            X_train, X_dev = X[dev_sample_index:], X[:dev_sample_index]
+            Y_train, Y_dev = Y[dev_sample_index:], Y[:dev_sample_index]
+            print('     train size: %d, dev size: %d' % (X_train.shape[0], X_dev.shape[0]))
+            train(X_train, Y_train, X_dev, Y_dev, cls)
+
+        # with fine tuning
         else:
-            entities_pos = cls_pos_par_entities[cls] + cls_pos_gen_entities[cls]
+            entities_neg = cls_neg_par_entities[cls]
+            p_ents, n_ents = align_samples(cls_pos_gen_entities[cls], entities_neg)
+            X, Y = embedding(p_ents, n_ents)
+            p_ents_ft, n_ents_ft = align_samples(cls_pos_par_entities[cls], entities_neg)
+            X_ft, Y_ft = embedding(p_ents_ft, n_ents_ft)
 
-        p_ents, n_ents = align_samples(entities_pos, entities_neg)
+            dev_sample_index = int(FLAGS.dev_sample_percentage * float(X_ft.shape[0]))
+            X_ft_train, X_dev = X_ft[dev_sample_index:], X_ft[:dev_sample_index]
+            Y_ft_train, Y_dev = Y_ft[dev_sample_index:], Y_ft[:dev_sample_index]
+            print('     [particular samples] train size: %d, dev size: %d' % (X_ft_train.shape[0], X_dev.shape[0]))
 
-        X, Y = embedding(p_ents, n_ents)
-        dev_sample_index = int(FLAGS.dev_sample_percentage * float(X.shape[0]))
-        X_train, X_dev = X[dev_sample_index:], X[:dev_sample_index]
-        Y_train, Y_dev = Y[dev_sample_index:], Y[:dev_sample_index]
-        print('     train size: %d, dev size: %d' % (X_train.shape[0], X_dev.shape[0]))
-        train(X_train, Y_train, X_dev, Y_dev, cls)
+            train(X, Y, X_dev, Y_dev, cls, X_ft_train, Y_ft_train)
 
-    # with fine tuning
-    else:
-        entities_neg = cls_neg_par_entities[cls]
-        p_ents, n_ents = align_samples(cls_pos_gen_entities[cls], entities_neg)
-        X, Y = embedding(p_ents, n_ents)
-        p_ents_ft, n_ents_ft = align_samples(cls_pos_par_entities[cls], entities_neg)
-        X_ft, Y_ft = embedding(p_ents_ft, n_ents_ft)
 
-        dev_sample_index = int(FLAGS.dev_sample_percentage * float(X_ft.shape[0]))
-        X_ft_train, X_dev = X_ft[dev_sample_index:], X_ft[:dev_sample_index]
-        Y_ft_train, Y_dev = Y_ft[dev_sample_index:], Y_ft[:dev_sample_index]
-        print('     [particular samples] train size: %d, dev size: %d' % (X_ft_train.shape[0], X_dev.shape[0]))
-
-        train(X, Y, X_dev, Y_dev, cls, X_ft_train, Y_ft_train)
+if __name__ == '__main__':
+    train_cnns()
