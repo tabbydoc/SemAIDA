@@ -76,8 +76,27 @@ def predict(test_x, classifier_name):
             predictions = sess.graph.get_operation_by_name("output/predictions").outputs.pop()
 
             test_p = sess.run(probabilities, {input_x: test_x, dropout_keep_prob: 0.5})
-
     return test_p[:, 1]
+
+
+def find_max_score_per_column(col_class_score: dict):
+    col_class_score_maxed = {}
+    for key, value in col_class_score.items():
+        table_number, column_name = key.split(',')
+        if table_number in col_class_score_maxed:
+            if col_class_score_maxed[table_number][0] < value:
+                col_class_score_maxed[table_number] = [value, column_name]
+        else:
+            col_class_score_maxed[table_number] = [value, column_name]
+    return format_dict(col_class_score_maxed)
+
+
+def format_dict(col_class_score_maxed: dict):
+    res_dict = {}
+    for key, value in col_class_score_maxed.items():
+        score, column_name = value[0], value[1]
+        res_dict[f"{key},{column_name}"] = score
+    return res_dict
 
 
 def predict_colnet():
@@ -129,14 +148,17 @@ def predict_colnet():
         if col_i % 5 == 0:
             print('     column %d predicted' % col_i)
 
+    col_class_score_maxed = find_max_score_per_column(col_class_p)
     print('Step #4: saving predictions')
     out_file_name = 'p_%s.csv' % os.path.basename(FLAGS.cnn_evaluate)
     full_path = os.path.join(FLAGS.io_dir, 'predictions')
     if not os.path.exists(full_path):
         os.makedirs(full_path)
     with open(os.path.join(full_path, out_file_name), 'w') as f:
-        for col_class in col_class_p.keys():
-            f.write('%s,"%.2f"\n' % (col_class, col_class_p[col_class]))
+        # for col_class in col_class_p.keys():
+        #     f.write('%s,"%.2f"\n' % (col_class, col_class_p[col_class]))
+        for col_class in col_class_score_maxed.keys():
+            f.write('%s,"%.2f"\n' % (col_class, col_class_score_maxed[col_class]))
 
 
 if __name__ == '__main__':

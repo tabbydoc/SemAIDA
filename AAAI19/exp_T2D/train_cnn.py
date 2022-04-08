@@ -47,7 +47,7 @@ parser.add_argument(
 parser.add_argument(
     '--train_type',
     type=int,
-    default=2,
+    default=3,
     help='0: Train CNN without fine tuning, using particular samples;'
          '1: Train CNN without fine tuning, using general samples;'
          '2: Train CNN without fine tuning, using general + particular samples'
@@ -224,7 +224,7 @@ def train(x_train, y_train, x_dev, y_dev, cls_name, x_train_ft=None, y_train_ft=
                     feed_dict)
                 time_str = datetime.datetime.now().isoformat()
                 # if step % FLAGS.evaluate_every == 0:
-                #     print("     {}: step {}, train loss {:g}, train acc {:g}".format(time_str, step, loss, accuracy))
+                    # print(f"     train acc {accuracy}")
                 train_summary_writer.add_summary(summaries, step)
 
             def dev_step(dev_x_batch, dev_y_batch, writer=None):
@@ -338,6 +338,9 @@ def train_cnns():
 
     print('   Step #4: train class by class')
     for cls in classes:
+        if cls in os.listdir(cnn_dir):
+            print(f'\n{cls} is already trained')
+            continue
         print('\nclass: %s' % cls)
         print('     %d general pos entities; %d particular pos entities; %d particular neg entities' %
               (len(cls_pos_gen_entities[cls]), len(cls_pos_par_entities[cls]), len(cls_neg_par_entities[cls])))
