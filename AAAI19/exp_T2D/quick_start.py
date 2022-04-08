@@ -1,3 +1,4 @@
+from predict_colnet import predict_colnet
 from sample_general import read_cls_ents, query_gen_ents, write_gen_samples
 from sample_particular import read_candidate_classes, read_ent_and_they_cls, generate_pos_sample, generate_neg_samples, \
     out_negative_samples
@@ -27,20 +28,20 @@ print('Step #1: extract column ground truth classes of columns of tables(T2Dv2)'
 extract_classes_columns()
 
 print('Step #2: generate samples for training')
-print('Lookup new Samples')
+print('----Lookup new Samples')
 col_cells = read_table_cells()
 cls_count, entities = read_exist_ent_cls()
 cls_count, ent_cls = lookup_ent_cls(col_cells, entities, cls_count)
 write_ents_cls(cls_count, ent_cls)
 
-print('Generate positive and negative samples')
+print('----Generate positive and negative samples')
 cand_classes = read_candidate_classes()
 ent_cls = read_ent_and_they_cls()
 pos_samples = generate_pos_sample(cand_classes, ent_cls)
 neg_samples = generate_neg_samples(pos_samples)
 out_negative_samples(pos_samples, neg_samples)
 
-print('Generate general samples')
+print('----Generate general samples')
 cls_ents = read_cls_ents()
 cls_gen_ents = query_gen_ents(cls_ents)
 write_gen_samples(cls_gen_ents)

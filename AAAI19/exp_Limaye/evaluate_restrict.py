@@ -15,7 +15,7 @@ parser.add_argument(
     type=str,
     # default=os.path.join(current_path, 'in_out/predictions/p_lookup.csv'),
     # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_lookup.csv'),
-    # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
+    # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_all.csv'),
     default=os.path.join(current_path, 'in_out/predictions/p_ent_class.csv'),
     help='File of predictions')
 parser.add_argument(

@@ -132,3 +132,4 @@ cnn/
 predictions/
 
 IJCAI19/
+*.csv

@@ -14,7 +14,7 @@ parser.add_argument(
 parser.add_argument(
     '--predictions_model',
     type=str,
-    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
+    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_all.csv'),
     help='predictions by ML models')
 
 parser.add_argument(
