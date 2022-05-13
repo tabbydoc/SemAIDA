@@ -5,6 +5,8 @@ Our software settings:
     python sparql-client 3.6
     sklearn 0.24.2
 
+If you want to evaluate your results with .ipynb (jupyter notebook) file install pandas 1.4.2.
+
 Requirements:
     wikipedia corpus (e.g., https://github.com/attardi/wikiextractor)
     pre-train word2vec (e.g., https://radimrehurek.com/gensim/models/word2vec.html)
