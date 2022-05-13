@@ -19,7 +19,7 @@ parser.add_argument(
     '--predictions',
     type=str,
     # default=os.path.join(current_path, 'in_out/predictions/p_lookup.csv'),
-    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
+    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_3_1.00.csv'),
     # default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_lookup.csv'),
     help='File of predictions')
 parser.add_argument(
@@ -61,9 +61,6 @@ with open(FLAGS.predictions) as f:
         if score >= FLAGS.threshold:
             col_cls_pos.add(col_cls)
 
-print(len(col_cls_pos))
-print(len(col_cls_gt))
-
 col_cls_gt2, col_cls_pos2 = set(), set()
 if FLAGS.primary_key == 'yes':
     pk_cols = primary_key_cols()
@@ -74,9 +71,6 @@ if FLAGS.primary_key == 'yes':
         if col_cls.split(':')[0] in pk_cols:
             col_cls_pos2.add(col_cls)
     col_cls_gt, col_cls_pos = col_cls_gt2, col_cls_pos2
-
-print(len(col_cls_pos))
-print(len(col_cls_gt))
 
 print('Step #3: Calculate metrics')
 

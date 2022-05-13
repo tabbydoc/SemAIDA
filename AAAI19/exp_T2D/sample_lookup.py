@@ -17,12 +17,12 @@ parser.add_argument(
 parser.add_argument(
     '--start_index',
     type=int,
-    default=28,
+    default=0,
     help='start index')
 parser.add_argument(
     '--end_index',
     type=int,
-    default=411,
+    default=5,
     help='end index')
 FLAGS, unparsed = parser.parse_known_args()
 if not os.path.exists(FLAGS.io_dir):
@@ -89,7 +89,7 @@ def lookup_ent_cls(col_cells, entities, cls_count):
                     s_cls += ('"%s",' % c)
                 f.write('"%s",%s\n' % (col, s_cls[:-1]))
 
-            print('column %d done' % i)
+            print('column %d done' % (i+1))
     return cls_count, ent_cls
 
 

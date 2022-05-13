@@ -18,7 +18,7 @@ parser.add_argument(
     '--predictions',
     type=str,
     # default=os.path.join(current_path, 'in_out/predictions/p_lookup.csv'),
-    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00.csv'),
+    default=os.path.join(current_path, 'in_out/predictions/p_cnn_1_2_1.00_cnn_2.csv'),
     # default=os.path.join(current_path, 'in_out\\predictions\\p_cnn_1_2_1.00_lookup.csv'),
     help='File of predictions')
 parser.add_argument(
@@ -29,7 +29,7 @@ parser.add_argument(
 parser.add_argument(
     '--primary_key',
     type=str,
-    default='no',
+    default='yes',
     help='Whether use primary key only')
 FLAGS, unparsed = parser.parse_known_args()
 

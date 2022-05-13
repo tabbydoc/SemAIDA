@@ -101,7 +101,7 @@ class SyntheticColumnCNN(object):
             with tf.name_scope("conv-max_pool-%s" % filter_size):
                 filter_shape = [filter_size, embedding_size, 1, num_filters]
                 Conv_W = tf.Variable(v1.truncated_normal(filter_shape, stddev=0.1), name="Conv_W")
-                Conv_b = tf.Variable(tf.constant(0.1, shape=[num_filters]), name="Conv_b")
+                Conv_b = tf.Variable(tf.constant(0.0, shape=[num_filters]), name="Conv_b")
                 conv = tf.nn.conv2d(
                     self.input_x,
                     Conv_W,
