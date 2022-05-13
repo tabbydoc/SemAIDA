@@ -44,7 +44,7 @@ parser.add_argument(
 parser.add_argument(
     '--cnn_evaluate',
     type=str,
-    default=os.path.join(current_path, 'in_out\\cnn\\cnn_1_2_1.00'),
+    default=os.path.join(current_path, 'in_out\cnn\cnn_1_3_1.00'),
     help='Directory of trained models')
 parser.add_argument(
     '--io_dir',
@@ -73,7 +73,6 @@ def predict(test_x, classifier_name):
             input_x = sess.graph.get_operation_by_name("input_x").outputs.pop()
             dropout_keep_prob = sess.graph.get_operation_by_name("dropout_keep_prob").outputs.pop()
             probabilities = sess.graph.get_operation_by_name("output/probabilities").outputs.pop()
-            predictions = sess.graph.get_operation_by_name("output/predictions").outputs.pop()
 
             test_p = sess.run(probabilities, {input_x: test_x, dropout_keep_prob: 0.5})
     return test_p[:, 1]
@@ -107,6 +106,7 @@ def predict_colnet():
 
     print('Step #2: reading col_cells and col_lookup_classes')
     col_cells = read_t2d_cells()
+    # print(col_cells)
     col_lookup_classes = dict()
     with open(os.path.join(FLAGS.io_dir, 'lookup_col_classes.csv')) as f:
         for line in f.readlines():
@@ -132,7 +132,6 @@ def predict_colnet():
             units = permutation_cells2synthetic_columns(cells)
 
         X = np.zeros((len(units), FLAGS.sequence_size, w2v_model.vector_size, 1))
-        # X = np.random.sample((len(units), FLAGS.sequence_size, w2v_model.vector_size, 1))
         for i, unit in enumerate(units):
             seq = synthetic_columns2sequence(unit, FLAGS.sequence_size)
             X[i] = sequence2matrix(seq, FLAGS.sequence_size, w2v_model)
@@ -142,23 +141,23 @@ def predict_colnet():
                 col_class = '"%s","%s"' % (col, classifier)
                 p = predict(X, classifier)
                 score = np.mean(p)
-                # print(score)
                 col_class_p[col_class] = score
 
         if col_i % 5 == 0:
             print('     column %d predicted' % col_i)
 
     col_class_score_maxed = find_max_score_per_column(col_class_p)
+    high_scores = {key: val for key, val in col_class_p.items() if val >= 0.7}
+    top_scores = {**col_class_score_maxed, **high_scores}
+
     print('Step #4: saving predictions')
     out_file_name = 'p_%s.csv' % os.path.basename(FLAGS.cnn_evaluate)
     full_path = os.path.join(FLAGS.io_dir, 'predictions')
     if not os.path.exists(full_path):
         os.makedirs(full_path)
     with open(os.path.join(full_path, out_file_name), 'w') as f:
-        # for col_class in col_class_p.keys():
-        #     f.write('%s,"%.2f"\n' % (col_class, col_class_p[col_class]))
-        for col_class in col_class_score_maxed.keys():
-            f.write('%s,"%.2f"\n' % (col_class, col_class_score_maxed[col_class]))
+        for col_class in sorted(top_scores.keys()):
+            f.write('%s,"%.2f"\n' % (col_class, top_scores[col_class]))
 
 
 if __name__ == '__main__':
