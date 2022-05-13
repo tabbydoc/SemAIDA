@@ -133,7 +133,7 @@ predictions/
 
 IJCAI19/
 *.csv
-/T2Dv2
-/T2Dv2_generated
-/T2Dv2_one
-/T2Dv2_full_back
+T2Dv2/
+T2Dv2_generated/
+T2Dv2_one/
+T2Dv2_full_back/
